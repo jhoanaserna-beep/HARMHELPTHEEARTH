@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Scratch & Match: Saving Earth Battle!</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #ff7eb3 0%, #ff758c 30%, #70a1ff 70%, #1e90ff 100%);
+            background-size: cover;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin: 2px 0;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        #timer-banner {
+            background-color: #f1c40f;
+            color: #2c3e50;
+            font-size: 2.2rem;
+            font-weight: bold;
+            padding: 4px 30px;
+            border-radius: 30px;
+            margin: 5px 0;
+            box-shadow: 0 6px 0px #d4ac0d;
+            border: 3px solid #ffffff;
+            letter-spacing: 1px;
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-4px); }
+        }
+
+        #game-split-container {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            gap: 15px;
+            margin-top: 5px;
+            align-items: stretch;
+        }
+
+        .team-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.95);
+            position: relative;
+        }
+
+        #team1-screen { border: 6px solid #2980b9; }
+        #team2-screen { border: 6px solid #9b59b6; }
+
+        .team-header {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            padding: 4px;
+            border-radius: 12px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        #team1-screen .team-header { background: linear-gradient(to right, #3498db, #2980b9); }
+        #team2-screen .team-header { background: linear-gradient(to right, #9b59b6, #8e44ad); }
+
+        .team-score-display {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 4px 0 8px 0;
+            color: #2c3e50;
+            background: #f1f2f6;
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .play-arena {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            height: 35vh;
+        }
+
+        .zone {
+            flex: 1;
+            border-radius: 15px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .harm-zone { background-color: #ffece9; border: 4px dashed #ff6b6b; }
+        .harm-zone.hovered { background-color: #ffdad4; }
+        .harm-zone h3 { color: #e74c3c; margin: 0 0 5px 0; font-size: 1.1rem; }
+
+        .help-zone { background-color: #e8f8f5; border: 4px dashed #1dd1a1; }
+        .help-zone.hovered { background-color: #d1f2eb; }
+        .help-zone h3 { color: #10ac84; margin: 0 0 5px 0; font-size: 1.1rem; }
+
+        .center-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 85px;
+            justify-content: space-around;
+        }
+
+        .earth-avatar {
+            width: 75px;
+            height: 75px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .thermometer-container {
+            width: 45px;
+            height: 120px;
+            background-color: #f8f9f9;
+            border-radius: 30px;
+            border: 3px solid #34495e;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .thermo-fluid-background {
+            width: 12px;
+            height: 90px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .thermo-fluid-level {
+            width: 100%;
+            height: 50%;
+            background-color: rgb(174, 214, 241);
+            position: absolute;
+            bottom: 0;
+            transition: height 0.4s, background-color 0.4s;
+        }
+
+        .thermo-bulb {
+            width: 22px;
+            height: 22px;
+            background-color: rgb(174, 214, 241);
+            border-radius: 50%;
+            border: 2px solid #7f8c8d;
+            margin-top: -10px;
+            z-index: 1;
+        }
+
+        .dropped-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            width: 100%;
+            overflow-y: auto;
+        }
+
+        .items-pool-container {
+            background: #ffffff;
+            border: 3px dashed #ced6e0;
+            border-radius: 15px;
+            padding: 8px;
+            margin-top: 8px;
+            height: 26vh;
+            overflow-y: auto;
+        }
+
+        .items-pool-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            justify-items: center;
+        }
+
+        .scratch-card-wrapper {
+            width: 58px;
+            height: 58px;
+            position: relative;
+            border: 3px solid #f1c40f;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .scratch-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        .draggable-card {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .draggable-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        .scratch-card-wrapper.ready-to-drag {
+            border-color: #2ecc71;
+            animation: wiggle 0.5s ease infinite alternate;
+        }
+
+        @keyframes wiggle {
+            0% { transform: rotate(-2deg); }
+            100% { transform: rotate(2deg); }
+        }
+
+        .scratch-card-wrapper.ready-to-drag .draggable-card {
+            cursor: grab;
+            z-index: 10;
+        }
+
+        .draggable-card.dragging {
+            opacity: 0.5;
+        }
+
+        .team-feedback {
+            font-size: 1rem;
+            font-weight: bold;
+            height: 22px;
+            text-align: center;
+            margin-top: 4px;
+        }
+        .correct { color: #10ac84; }
+        .wrong { color: #ff6b6b; }
+
+        #win-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #final-earth {
+            width: 140px;
+            height: 140px;
+            margin-bottom: 20px;
+            object-fit: contain;
+        }
+
+        #reset-btn {
+            margin-top: 25px;
+            padding: 14px 40px;
+            font-size: 1.4rem;
+            font-family: inherit;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0px #27ae60;
+            transition: all 0.2s;
+        }
+        #reset-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🌎 Mission: Save the Earth Game! 🌎</h1>
+    
+    <div id="timer-banner">⏱️ 02:00</div>
+    
+    <div id="game-split-container">
+        
+        <div class="team-screen" id="team1-screen" data-team="1">
+            <div class="team-header">TEAM 1</div>
+            <div class="team-score-display">🌟 Score: <span id="score-val-t1">0</span></div>
+            <div class="play-arena">
+                <div class="zone harm-zone" data-type="harm">
+                    <h3>🔥 Harm Earth (+3)</h3>
+                    <div class="dropped-grid" id="harm-grid-t1"></div>
+                </div>
+                <div class="center-status">
+                    <img class="earth-avatar" id="avatar-t1" src="https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20220443.png?updatedAt=1779372310139" alt="Earth">
+                    <div class="thermometer-container" id="thermo-box-t1">
+                        <div class="thermo-fluid-background"><div class="thermo-fluid-level" id="level-t1"></div></div>
+                        <div class="thermo-bulb" id="bulb-t1"></div>
+                    </div>
+                </div>
+                <div class="zone help-zone" data-type="help">
+                    <h3>🌱 Help Earth (+5)</h3>
+                    <div class="dropped-grid" id="help-grid-t1"></div>
+                </div>
+            </div>
+            <div class="team-feedback" id="feedback-t1">Scratch cards to begin!</div>
+            <div class="items-pool-container">
+                <div class="items-pool-grid" id="pool-t1"></div>
+            </div>
+        </div>
+
+        <div class="team-screen" id="team2-screen" data-team="2">
+            <div class="team-header">TEAM 2</div>
+            <div class="team-score-display">🌟 Score: <span id="score-val-t2">0</span></div>
+            <div class="play-arena">
+                <div class="zone harm-zone" data-type="harm">
+                    <h3>🔥 Harm Earth (+3)</h3>
+                    <div class="dropped-grid" id="harm-grid-t2"></div>
+                </div>
+                <div class="center-status">
+                    <img class="earth-avatar" id="avatar-t2" src="https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20220443.png?updatedAt=1779372310139" alt="Earth">
+                    <div class="thermometer-container" id="thermo-box-t2">
+                        <div class="thermo-fluid-background"><div class="thermo-fluid-level" id="level-t2"></div></div>
+                        <div class="thermo-bulb" id="bulb-t2"></div>
+                    </div>
+                </div>
+                <div class="zone help-zone" data-type="help">
+                    <h3>🌱 Help Earth (+5)</h3>
+                    <div class="dropped-grid" id="help-grid-t2"></div>
+                </div>
+            </div>
+            <div class="team-feedback" id="feedback-t2">Scratch cards to begin!</div>
+            <div class="items-pool-container">
+                <div class="items-pool-grid" id="pool-t2"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="win-overlay">
+        <img id="final-earth" src="https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20220443.png?updatedAt=1779372310139" alt="Earth Finish">
+        <div style="color: #f1c40f; font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">⏰ TIME'S UP!</div>
+        <div id="win-text"></div>
+        <div id="final-scores-text" style="font-size: 1.6rem; margin-top: 15px; color: #ced6e0; line-height: 1.6;"></div>
+        <button id="reset-btn" onclick="resetGame()">Play Again! 🔄</button>
+    </div>
+
+    <script>
+        const masterDeck = [
+            { id: 'harm1', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214343.png', type: 'harm', points: 3 },
+            { id: 'harm2', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214357.png', type: 'harm', points: 3 },
+            { id: 'harm3', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20212822.png', type: 'harm', points: 3 },
+            { id: 'harm4', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20212812.png', type: 'harm', points: 3 },
+            { id: 'harm5', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214304.png', type: 'harm', points: 3 },
+            { id: 'harm6', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214330.png', type: 'harm', points: 3 },
+            
+            { id: 'help1', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214518.png', type: 'help', points: 5 },
+            { id: 'help2', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214318.png', type: 'help', points: 5 },
+            { id: 'help3', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20212846.png', type: 'help', points: 5 },
+            { id: 'help4', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20212835.png', type: 'help', points: 5 },
+            { id: 'help5', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20214409.png', type: 'help', points: 5 },
+            { id: 'help6', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20212857.png', type: 'help', points: 5 },
+            
+            { id: 'special_harm', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20215137.png?updatedAt=1779371675605', type: 'harm', points: -5 },
+            { id: 'special_help', url: 'https://ik.imagekit.io/bdafaeksy/Screenshot%202026-05-21%20215350.png?updatedAt=1779371679105', type: 'help', points: 10 }
+        ];
+
+        let state = {
+            1: { score: 0, itemsCleared: 0, thermo: 50, rgb: [174, 214, 241] },
+            2: { score: 0, itemsCleared: 0, thermo: 50, rgb: [174, 214, 241] }
+        };
+
+        let gameTimeRemaining = 120; 
+        let countdownTicker = null;
+        let isGameFinished = false;
+
+        function initGame() {
+            isGameFinished = false;
+            document.getElementById('win-overlay').style.display = 'none';
+            setupTeamArena(1, masterDeck);
+            setupTeamArena(2, masterDeck);
+            
+            clearInterval(countdownTicker);
+            gameTimeRemaining = 120;
+            updateTimerDisplay();
+            countdownTicker = setInterval(processClockTick, 1000);
+        }
+
+        function processClockTick() {
+            if (isGameFinished) return;
+            gameTimeRemaining--;
+            updateTimerDisplay();
+            if (gameTimeRemaining <= 0) endGameSession();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(gameTimeRemaining / 60);
+            const seconds = gameTimeRemaining % 60;
+            const paddedSeconds = seconds < 10 ? '0' + seconds : seconds;
+            document.getElementById('timer-banner').innerText = `⏱️ 0${minutes}:${paddedSeconds}`;
+        }
+
+        function setupTeamArena(teamId, deck) {
+            const pool = document.getElementById(`pool-t${teamId}`);
+            const harmGrid = document.getElementById(`harm-grid-t${teamId}`);
+            const helpGrid = document.getElementById(`help-grid-t${teamId}`);
+            const feedback = document.getElementById(`feedback-t${teamId}`);
+            
+            pool.innerHTML = ''; harmGrid.innerHTML = ''; helpGrid.innerHTML = '';
+            feedback.innerHTML = 'Scratch cards to begin!';
+            document.getElementById(`score-val-t${teamId}`).innerText = "0";
+            
+            state[teamId] = { score: 0, itemsCleared: 0, thermo: 50, rgb: [174, 214, 241] };
+            renderThermo(teamId);
+
+            const shuffled = [...deck].sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const uniqueId = `t${teamId}_${item.id}`;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'scratch-card-wrapper';
+                wrapper.id = 'wrap_' + uniqueId;
+
+                const card = document.createElement('div');
+                card.className = 'draggable-card';
+                card.id = uniqueId;
+                card.setAttribute('data-type', item.type);
+                card.setAttribute('data-points', item.points);
+                card.setAttribute('data-team', teamId);
+                card.innerHTML = `<img src="${item.url}">`;
+
+                const canvas = document.createElement('canvas');
+                canvas.className = 'scratch-canvas';
+                
+                wrapper.appendChild(card);
+                wrapper.appendChild(canvas);
+                pool.appendChild(wrapper);
+
+                const ctx = canvas.getContext('2d');
+                canvas.width = 58; canvas.height = 58;
+                
+                ctx.fillStyle = '#f1c40f'; ctx.fillRect(0, 0, 58, 58);
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('?', 29, 41);
+
+                let isDrawing = false;
+                let steps = 0;
+
+                function scratch(cx, cy) {
+                    if (isGameFinished) return;
+                    const rect = canvas.getBoundingClientRect();
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.beginPath();
+                    ctx.arc(cx - rect.left, cy - rect.top, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    steps++;
+                    if (steps > 24) {
+                        canvas.remove();
+                        wrapper.classList.add('ready-to-drag');
+                        bindDragEvents(card);
+                    }
+                }
+
+                canvas.addEventListener('mousedown', () => isDrawing = true);
+                canvas.addEventListener('mousemove', (e) => { if(isDrawing) scratch(e.clientX, e.clientY); });
+                window.addEventListener('mouseup', () => isDrawing = false);
+
+                canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e.touches[0].clientX, e.touches[0].clientY); });
+                canvas.addEventListener('touchmove', (e) => { if(isDrawing) scratch(e.touches[0].clientX, e.touches[0].clientY); });
+                canvas.addEventListener('touchend', () => isDrawing = false);
+            });
+        }
+
+        function bindDragEvents(card) {
+            card.draggable = true;
+            card.addEventListener('dragstart', (e) => {
+                if (isGameFinished) { e.preventDefault(); return; }
+                e.dataTransfer.setData('text/plain', card.id);
+                card.classList.add('dragging');
+            });
+            card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+            let startX, startY, initX, initY;
+            card.addEventListener('touchstart', (e) => {
+                if (isGameFinished) return;
+                card.classList.add('dragging');
+                const t = e.touches[0]; const r = card.getBoundingClientRect();
+                startX = t.clientX; startY = t.clientY;
+                card.style.position = 'fixed'; card.style.top = r.top+'px'; card.style.left = r.left+'px';
+                card.style.width = '58px'; card.style.height = '58px';
+                initX = r.left; initY = r.top;
+            }, {passive: false});
+
+            card.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!card.classList.contains('dragging') || isGameFinished) return;
+                card.style.left = (initX + (e.touches[0].clientX - startX)) + 'px';
+                card.style.top = (initY + (e.touches[0].clientY - startY)) + 'px';
+            }, {passive: false});
+
+            card.addEventListener('touchend', (e) => {
+                card.classList.remove('dragging');
+                if (isGameFinished) return;
+                const t = e.changedTouches[0];
+                card.style.display = 'none';
+                const below = document.elementFromPoint(t.clientX, t.clientY);
+                card.style.display = 'block';
+                card.style.position = ''; card.style.top = ''; card.style.left = ''; card.style.width = ''; card.style.height = '';
+                
+                const zone = below ? below.closest('.zone') : null;
+                if(zone) evaluateDrop(card, zone);
+            });
+        }
+
+        document.querySelectorAll('.zone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); if(!isGameFinished) zone.classList.add('hovered'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('hovered'));
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault(); zone.classList.remove('hovered');
+                if (isGameFinished) return;
+                const activeCard = document.querySelector('.dragging');
+                if(activeCard) evaluateDrop(activeCard, zone);
+            });
+        });
+
+        function evaluateDrop(card, zone) {
+            if (isGameFinished) return;
+
+            const cardTeam = card.getAttribute('data-team');
+            const zoneTeam = zone.closest('.team-screen').getAttribute('data-team');
+            const feedback = document.getElementById(`feedback-t${cardTeam}`);
+
+            if (cardTeam !== zoneTeam) {
+                feedback.innerHTML = "<span class='wrong'>Wrong side! Stay on your board!</span>";
+                return;
+            }
+
+            const cardType = card.getAttribute('data-type');
+            const zoneType = zone.getAttribute('data-type');
+            const pointValue = parseInt(card.getAttribute('data-points'));
+
+            if (cardType === zoneType) {
+                const sign = pointValue >= 0 ? "+" : "";
+                feedback.innerHTML = `<span class='correct'>Awesome! (${sign}${pointValue} Pts)</span>`;
+                document.getElementById('wrap_' + card.id).remove();
+
+                const targetGrid = document.getElementById(`${zoneType}-grid-t${cardTeam}`);
+                const finalCard = document.createElement('div');
+                finalCard.className = 'scratch-card-wrapper';
+                finalCard.style.width = '40px'; finalCard.style.height = '40px';
+                finalCard.innerHTML = `<div class="draggable-card"><img src="${card.querySelector('img').src}"></div>`;
+                targetGrid.appendChild(finalCard);
+
+                state[cardTeam].score += pointValue;
+                document.getElementById(`score-val-t${cardTeam}`).innerText = state[cardTeam].score;
+
+                if (zoneType === 'harm') {
+                    state[cardTeam].thermo = Math.min(100, state[cardTeam].thermo + 7);
+                    state[cardTeam].rgb[0] = Math.min(255, state[cardTeam].rgb[0] + 18);
+                    state[cardTeam].rgb[1] = Math.max(50, state[cardTeam].rgb[1] - 22);
+                    state[cardTeam].rgb[2] = Math.max(50, state[cardTeam].rgb[2] - 22);
+                } else {
+                    state[cardTeam].thermo = Math.max(0, state[cardTeam].thermo - 7);
+                    state[cardTeam].rgb[0] = Math.max(50, state[cardTeam].rgb[0] - 22);
+                    state[cardTeam].rgb[1] = Math.min(255, state[cardTeam].rgb[1] + 15);
+                    state[cardTeam].rgb[2] = Math.min(255, state[cardTeam].rgb[2] + 15);
+                }
+                
+                renderThermo(cardTeam);
+                state[cardTeam].itemsCleared++;
+
+                if(state[1].itemsCleared === 14 || state[2].itemsCleared === 14) {
+                    endGameSession();
+                }
+            } else {
+                feedback.innerHTML = "<span class='wrong'>Oops! Try matching again!</span>";
+            }
+        }
+
+        function renderThermo(teamId) {
+            const t = state[teamId];
+            const level = document.getElementById(`level-t${teamId}`);
+            const bulb = document.getElementById(`bulb-t${teamId}`);
+            level.style.height = t.thermo + '%';
+            const col = `rgb(${t.rgb[0]},${t.rgb[1]},${t.rgb[2]})`;
+            level.style.backgroundColor = col;
+            bulb.style.backgroundColor = col;
+        }
+
+        function endGameSession() {
+            isGameFinished = true;
+            clearInterval(countdownTicker);
+            
+            let winText = "";
+            if (state[1].score > state[2].score) {
+                winText = "🏆 Team 1 Wins the Eco-Battle! 🏆";
+            } else if (state[2].score > state[1].score) {
+                winText = "🏆 Team 2 Wins the Eco-Battle! 🏆";
+            } else {
+                winText = "🤝 Superb Job! Both Teams Tied! 🤝";
+            }
+            
+            document.getElementById('win-text').innerText = winText;
+            document.getElementById('final-scores-text').innerHTML = `<b>Team 1 Score:</b> ${state[1].score} Pts (${state[1].itemsCleared}/14 sorted)<br><b>Team 2 Score:</b> ${state[2].score} Pts (${state[2].itemsCleared}/14 sorted)`;
+            document.getElementById('win-overlay').style.display = 'flex';
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
